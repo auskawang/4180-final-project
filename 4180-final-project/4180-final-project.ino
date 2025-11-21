@@ -37,8 +37,8 @@ void taskPowerManager(void *py) {
 
 void setup() {
   Serial.begin(115200);
-  xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
-  xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
+  // xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
+  // xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
 }
 
 void loop() {

@@ -46,22 +46,22 @@ void status_led_set_from_hydration_state(HydrationState state) {
   switch(state) {
     case HYDRATION_GOOD:
       color = COLOR_GOOD;
-      Serial.println("LED: ✅ GREEN (Good hydration)");
+      Serial.println("LED:  GREEN (Good hydration)");
       break;
       
     case HYDRATION_OK:
       color = COLOR_OK;
-      Serial.println("LED: 💛 YELLOW (OK hydration)");
+      Serial.println("LED:  YELLOW (OK hydration)");
       break;
       
     case HYDRATION_LOW:
       color = COLOR_LOW;
-      Serial.println("LED: 🟠 ORANGE (Low hydration)");
+      Serial.println("LED:  ORANGE (Low hydration)");
       break;
       
     case HYDRATION_CRITICAL:
       color = COLOR_CRITICAL;
-      Serial.println("LED: 🔴 RED (Critical - drink water!)");
+      Serial.println("LED:  RED (Critical - drink water!)");
       break;
       
     default:
@@ -84,7 +84,7 @@ void status_led_off() {
 }
 
 void status_led_test_sequence() {
-  Serial.println("\n🌈 Testing RGB LED colors...");
+  Serial.println("\n Testing RGB LED colors...");
   
   // Red
   Serial.println("Red...");
@@ -129,23 +129,3 @@ void status_led_test_sequence() {
   
   Serial.println("RGB LED test complete!\n");
 }
-```
-
-## Wiring Guide for RGB LED:
-
-**Common Cathode RGB LED (most common):**
-```
-ESP32-C6          RGB LED
-GPIO 6    ─────>  R (Red pin) ──┬── 220Ω resistor
-GPIO 7    ─────>  G (Green pin) ┼── 220Ω resistor
-GPIO 10   ─────>  B (Blue pin) ─┴── 220Ω resistor
-                  - (Cathode)  ───── GND
-```
-
-**Common Anode RGB LED:**
-```
-ESP32-C6          RGB LED
-GPIO 6    ─────>  R (Red pin) ──┬── 220Ω resistor
-GPIO 7    ─────>  G (Green pin) ┼── 220Ω resistor
-GPIO 10   ─────>  B (Blue pin) ─┴── 220Ω resistor
-                  + (Anode)    ───── 3.3V

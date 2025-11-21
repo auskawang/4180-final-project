@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include "speaker.h"
+
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -11,7 +13,13 @@ void taskUpdateStatusLED(void *pv) {
 Speaker that audibly alerts the user when the LED is red and the user needs to drink water
 */
 void taskAlertUser(void *pv) {
-  
+  while(1) {
+    // Check if hydration level is critical/low
+    // If yes, trigger alert
+    speaker_task_handler();
+    
+    vTaskDelay(pdMS_TO_TICKS(1000));  // Check every second
+  }
 }
 
 /*

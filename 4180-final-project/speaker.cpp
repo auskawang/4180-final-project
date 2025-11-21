@@ -16,7 +16,7 @@ void speaker_alert() {
   if (current_state == SPEAKER_IDLE) {
     current_state = SPEAKER_ALERTING;
     
-    // Generate tone using PWM - ESP32-C6 compatible
+    // Generate tone using PWM
     ledcAttach(SPEAKER_PIN, ALERT_FREQUENCY, 8);  // pin, frequency, 8-bit resolution
     ledcWrite(SPEAKER_PIN, 128);  // 50% duty cycle
     

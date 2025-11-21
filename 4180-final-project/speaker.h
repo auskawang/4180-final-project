@@ -4,8 +4,7 @@
 #include <Arduino.h>
 
 // Configuration constants
-// ESP32-C6 GPIO pins: Use GPIO 0-30 (avoid strapping pins 8, 9)
-#define SPEAKER_PIN 21  // Change to your actual GPIO pin (try 5, 6, 7, etc.)
+#define SPEAKER_PIN 21
 #define ALERT_FREQUENCY 1000  // Hz
 #define ALERT_DURATION 500    // ms
 #define ALERT_INTERVAL 30000  // 30 seconds between alerts

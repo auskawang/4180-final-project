@@ -6,9 +6,9 @@
 
 // Configuration constants
 // ESP32-C6 compatible GPIO pins - ADJUST THESE TO YOUR WIRING
-#define LED_RED_PIN 6      // Connect to RED pin of RGB LED
-#define LED_GREEN_PIN 7    // Connect to GREEN pin of RGB LED
-#define LED_BLUE_PIN 10    // Connect to BLUE pin of RGB LED
+#define LED_RED_PIN 15      // Connect to RED pin of RGB LED
+#define LED_GREEN_PIN 23    // Connect to GREEN pin of RGB LED
+#define LED_BLUE_PIN 22    // Connect to BLUE pin of RGB LED
 
 // Set this based on your RGB LED type
 #define COMMON_ANODE false  // Set to true if using common anode, false for common cathode

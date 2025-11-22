@@ -3,6 +3,7 @@
 #include "hydration.h"
 #include "status_led.h"
 #include "scale.h"
+#include "storage.h"
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -44,13 +45,15 @@ void taskReadScale(void *pv) {
   float prev_weight = 0;
   while (1) {
     float current_weight = scale_read_weight();
-    //if there is something on the scale, the scale weight decreased, and the difference in weight is meaningful
-    if (current_weight > 30.0 && current_weight < prev_weight && prev_weight - current_weight > 30.0)
-    {
-      record_grams_drank(prev_weight - current_weight);
+    
+    // If there is something on the scale, the scale weight decreased, and the difference in weight is meaningful
+    if (current_weight > 30.0 && current_weight < prev_weight && prev_weight - current_weight > 30.0) {
+      record_grams_drank(prev_weight - current_weight);  // This now automatically saves to storage
     }
+    
     if (current_weight > 30.0)
       prev_weight = current_weight;
+      
     update_hydration_status();
     vTaskDelay(pdMS_TO_TICKS(100));
   }
@@ -68,16 +71,24 @@ void taskPowerManager(void *pv) {
 
 void setup() {
   Serial.begin(115200);
+  
+  // Initialize storage first (single function call as requested)
+  storage_init();
+  
+  // Initialize all subsystems
   scale_init();
   status_led_init();
   speaker_init();
-  // xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
-  // xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
+  hydration_init();  // This will load data from storage if available
+  
+  // Create tasks
   xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
   xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 2, NULL);
   xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 3, NULL);
+  
+  Serial.println("System initialized. Hydration tracking started.");
 }
 
 void loop() {
-
+  // Empty - using FreeRTOS tasks
 }

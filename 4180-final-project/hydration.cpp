@@ -1,35 +1,36 @@
 #include "hydration.h"
 #include <Arduino.h>
-HydrationState hydration_state = HYDRATED;
+
+HydrationState hydration_state = CRITICAL;
 float initial_time = 0;
-const float goal_grams = 300.0;
-float grams_left = goal_grams;
-float total_time_ms = 120 * 1000;
-float tracker = goal_grams;
-void update_hydration_status(float grams_drank) {
+float grams_left = DAILY_GOAL_GRAMS;
+float tracker = DAILY_GOAL_GRAMS;
+
+void record_grams_drank(float grams_drank) {
+  grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
+}
+void update_hydration_status() {
   if (initial_time == 0) {
     initial_time = millis();
   }
   float time_now = millis();
   float time_since_start = time_now - initial_time;
   
-  //tracker should decrease linearly (goal - goal/total_time * ms passed)
-  float tracker = (tracker > 300) ? 300 : goal_grams/total_time_ms * time_since_start;
-  //Serial.println(goal_grams - tracker);
+  //tracker mimics the ideal grams_left at a certain time; tracker should decrease linearly (goal - goal/total_time * ms passed)
+  float subtract = DAILY_GOAL_GRAMS/TOTAL_TIME_MS * time_since_start;
+  float tracker = (DAILY_GOAL_GRAMS - subtract < 0) ? 0 : DAILY_GOAL_GRAMS - subtract;
 
-  //record meaningful changes
-  if (grams_drank < 30.0) {
-    grams_drank = 0;
-  }
-
-  grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
+  Serial.print("grams_left=");
+  Serial.print(grams_left);
+  Serial.print(" tracker=");
+  Serial.println(tracker);
 
   //if we are behind track then change hydration state to CRITICAL
-  if (goal_grams - tracker - grams_left < 0) {
+  if (tracker - grams_left < 0) {
     hydration_state = CRITICAL;
   }
   //if tracker is close then set to NEEDS_WATER
-  else if (goal_grams - tracker - grams_left < goal_grams / 5) {
+  else if (tracker - grams_left < DAILY_GOAL_GRAMS / 5) {
     hydration_state = NEEDS_WATER;
   }
   else {

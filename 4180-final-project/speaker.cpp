@@ -9,7 +9,7 @@ void speaker_init() {
   digitalWrite(SPEAKER_PIN, LOW);
   current_state = SPEAKER_IDLE;
   last_alert_time = 0;
-  Serial.println("Speaker initialized");
+  //Serial.println("Speaker initialized");
 }
 
 void speaker_alert() {
@@ -29,7 +29,7 @@ void speaker_alert() {
     current_state = SPEAKER_IDLE;
     last_alert_time = millis();
     
-    Serial.println("Alert played");
+    //Serial.println("Alert played");
   }
 }
 

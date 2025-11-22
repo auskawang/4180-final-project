@@ -2,18 +2,8 @@
 #define SPEAKER_H
 
 #include <Arduino.h>
+#include "config.h"
 
-// Configuration constants
-#define SPEAKER_PIN 21
-#define ALERT_FREQUENCY 1000  // Hz
-#define ALERT_DURATION 500    // ms
-#define ALERT_INTERVAL 30000  // 30 seconds between alerts
-
-// Speaker states
-enum SpeakerState {
-  SPEAKER_IDLE,
-  SPEAKER_ALERTING
-};
 
 // Function prototypes
 void speaker_init();

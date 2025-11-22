@@ -4,6 +4,7 @@
 #include "status_led.h"
 #include "scale.h"
 #include "storage.h"
+#include "web.h"
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -28,35 +29,14 @@ void taskAlertUser(void *pv) {
 }
 
 /*
-Generates HTML page allowing user to view hydration data and interact with system wirelessly through Bluetooth
-This is where you'll access the storage functions for your web interface
+Generates HTML page allowing user to view hydration data and interact with system wirelessly through Wifi
 */
 void taskHTMLPage(void *pv) {
   while(1) {
-    // HTML server logic - TO BE IMPLEMENTED
-    
-    // EXAMPLE: How to use storage in your web server
-    // When user requests history page:
-    /*
-    DailyHydrationData history[STORAGE_DAYS];
-    if (storage_get_history(history)) {
-      // Send history array to HTML page
-      // Convert to JSON or CSV for export
-      for (int i = 0; i < STORAGE_DAYS; i++) {
-        if (history[i].valid) {
-          // Send: day, consumed, goal, percentage
-        }
-      }
-    }
-    */
-    
-    // When user clicks "Reset All Data" button:
-    // storage_reset_all();
-    
-    // When user clicks "Save Today" button:
-    // hydration_save_day();
-    
-    vTaskDelay(pdMS_TO_TICKS(100));
+    set_grams_left_and_tracker(read_grams_left(), read_tracker());
+    set_total_grams(read_total_grams());
+    webserver_handle_client();
+    vTaskDelay(10);
   }
 }
 
@@ -77,6 +57,14 @@ void taskReadScale(void *pv) {
       prev_weight = current_weight;
       
     update_hydration_status();
+
+    //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
+    if (read_tracker() == 0) {
+      //store(read_total_grams());
+      reset();
+    }
+      
+    
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
@@ -114,57 +102,14 @@ void taskPowerManager(void *pv) {
 
 void setup() {
   Serial.begin(115200);
-  
-  // ============ INITIALIZATION (Single calls) ============
-  storage_init();        // Initialize NVS storage
-  scale_init();          // Initialize HX711 scale
-  status_led_init();     // Initialize RGB LED
-  speaker_init();        // Initialize speaker
-  hydration_init();      // Initialize hydration tracking
-  
-  // ============ OPTIONAL: Print stored history on boot ============
-  Serial.println("\n=== Stored History ===");
-  storage_print_history();
-  
-  // ============ CREATE TASKS ============
-  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
-  xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 2, NULL);
+  scale_init();
+  status_led_init();
+  speaker_init();
+  web_init();
+  xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 3, NULL);
   xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 3, NULL);
-  // xTaskCreate(taskHTMLPage, "taskHTMLPage", 4096, NULL, 1, NULL);  // Enable when implementing
-  // xTaskCreate(taskDailySave, "taskDailySave", 2048, NULL, 1, NULL);  // Enable for auto-save
-  
-  Serial.println("System initialized. Hydration tracking started.");
-  
-  // ============ TESTING: Example commands you can call ============
-  // Uncomment these to test the storage functions:
-  
-  // Test 1: Save some fake data for testing
-  // storage_save_today(250.0, 300.0);  // Day 1
-  // delay(100);
-  // storage_save_today(280.0, 300.0);  // Day 2 (simulating next day)
-  
-  // Test 2: Print history
-  // storage_print_history();
-  
-  // Test 3: Get history as array
-  /*
-  DailyHydrationData history[STORAGE_DAYS];
-  if (storage_get_history(history)) {
-    Serial.println("Retrieved history:");
-    for (int i = 0; i < STORAGE_DAYS; i++) {
-      if (history[i].valid) {
-        Serial.printf("Day %d: %.0fg/%.0fg (%.1f%%)\n", 
-          history[i].timestamp,
-          history[i].grams_consumed,
-          history[i].daily_goal,
-          (history[i].grams_consumed / history[i].daily_goal) * 100.0);
-      }
-    }
-  }
-  */
-  
-  // Test 4: Reset all data
-  // storage_reset_all();
+  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
+  xTaskCreate(taskHTMLPage, "taskHTMLPage", 2048, NULL, 2, NULL);
 }
 
 void loop() {

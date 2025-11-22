@@ -10,7 +10,7 @@
 
 //HYDRATION -----------------------------------------------------------
 #define DAILY_GOAL_GRAMS 300.0
-#define TOTAL_TIME_MS (120.0 * 1000) //120 seconds
+#define TOTAL_TIME_MS (30.0 * 1000) //120 seconds
 
 enum HydrationState {
     HYDRATED,

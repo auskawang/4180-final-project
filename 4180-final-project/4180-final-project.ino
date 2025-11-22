@@ -46,12 +46,9 @@ void taskHTMLPage(void *pv) {
 Detects scale changes and stores meaningful changes in non-volatile memory
 */
 void taskReadScale(void *pv) {
-  while(1) {
-    // Scale reading logic - TO BE IMPLEMENTED
-    // Example: 
-    // float weight_change = scale_read_grams();
-    // hydration_update_from_weight(weight_change);
-    
+  while (1) {
+    update_hydration_status(-1 * scale_read_delta());
+    Serial.println(get_hydration_state());
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
@@ -91,174 +88,12 @@ void taskTestHydration(void *pv) {
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);  // Give serial time to initialize
-  
-  Serial.println("\n\n╔════════════════════════════════════╗");
-  Serial.println("║   HYDRATION TRACKER STARTING...   ║");
-  Serial.println("╚════════════════════════════════════╝\n");
-  
-  // Initialize modules
-  Serial.println("Initializing modules...");
-  hydration_init();
-  speaker_init();
-  status_led_init();
-  
-  // Run LED test sequence on startup
-  Serial.println("\n Running LED startup test...");
-  status_led_test_sequence();
-  
-  Serial.println("\nCreating FreeRTOS tasks...");
-  
-  // Create FreeRTOS tasks
-  xTaskCreate(taskUpdateStatusLED, "StatusLED", 2048, NULL, 1, NULL);
-  xTaskCreate(taskAlertUser, "AlertUser", 2048, NULL, 2, NULL);
-  xTaskCreate(taskTestHydration, "TestHydration", 2048, NULL, 1, NULL);
-  
-  // Uncomment these as you implement them:
-  // xTaskCreate(taskReadScale, "ReadScale", 4096, NULL, 2, NULL);
-  // xTaskCreate(taskHTMLPage, "HTMLPage", 8192, NULL, 1, NULL);
-  // xTaskCreate(taskPowerManager, "PowerManager", 2048, NULL, 1, NULL);
-  
-  Serial.println("✓ All tasks created successfully\n");
-  
-  Serial.println("╔════════════════════════════════════╗");
-  Serial.println("║    HYDRATION TRACKER ACTIVE!      ║");
-  Serial.println("╚════════════════════════════════════╝");
-  Serial.println("\n System Status:");
-  Serial.println("   LED: RED (CRITICAL state)");
-  Serial.println("   Speaker: Alerts every 30 seconds");
-  Serial.println("   Hydration: 0ml / 2000ml (0%)");
-  Serial.println("\n TIP: Type 'h' in Serial Monitor for commands\n");
-  Serial.println("─────────────────────────────────────\n");
+  scale_init();
+  // xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
+  // xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
+  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
 }
 
 void loop() {
-  static bool led_on = true;
-  
-  // Handle serial commands for testing
-  if (Serial.available() > 0) {
-    char cmd = Serial.read();
-    
-    // Clear any trailing newline/carriage return
-    while(Serial.available() > 0 && (Serial.peek() == '\n' || Serial.peek() == '\r')) {
-      Serial.read();
-    }
-    
-    switch(cmd) {
-      case 'd':  // Drink 200ml
-        Serial.println("\n Simulating drinking 200ml...");
-        hydration_add_intake(200);
-        Serial.printf("Progress: %d%% (%.0f / %.0f ml)\n", 
-                     hydration_get_percentage(),
-                     hydration_get_current_ml(),
-                     hydration_get_goal_ml());
-        status_led_update();  // Immediately update LED
-        break;
-        
-      case 'D':  // Drink 500ml (bigger gulp)
-        Serial.println("\n Simulating drinking 500ml...");
-        hydration_add_intake(500);
-        Serial.printf("Progress: %d%% (%.0f / %.0f ml)\n", 
-                     hydration_get_percentage(),
-                     hydration_get_current_ml(),
-                     hydration_get_goal_ml());
-        status_led_update();  // Immediately update LED
-        break;
-        
-      case 'r':
-      case 'R':
-        Serial.println("\n Resetting daily hydration...");
-        hydration_reset_daily();
-        status_led_update();  // Immediately update LED
-        Serial.println("✓ Reset complete - back to CRITICAL state");
-        break;
-        
-      case 's':
-      case 'S':
-        Serial.println("\n╔════════ CURRENT STATUS ════════╗");
-        Serial.printf("  Intake: %.0f ml / %.0f ml\n", 
-                     hydration_get_current_ml(), 
-                     hydration_get_goal_ml());
-        Serial.printf("  Progress: %d%%\n", hydration_get_percentage());
-        Serial.print("  State: ");
-        switch(hydration_get_state()) {
-          case HYDRATION_GOOD: 
-            Serial.println(" GOOD (Green LED)"); 
-            break;
-          case HYDRATION_OK: 
-            Serial.println(" OK (Yellow LED)"); 
-            break;
-          case HYDRATION_LOW: 
-            Serial.println(" LOW (Orange LED)"); 
-            break;
-          case HYDRATION_CRITICAL: 
-            Serial.println(" CRITICAL (Red LED)"); 
-            break;
-        }
-        Serial.printf("  Alerts: %s\n", alert_enabled ? " ENABLED" : " DISABLED");
-        Serial.printf("  LED: %s\n", led_on ? " ON" : " OFF");
-        Serial.println("╚════════════════════════════════╝");
-        break;
-        
-      case 'a':
-      case 'A':
-        alert_enabled = !alert_enabled;
-        Serial.printf("\n Alerts %s\n", alert_enabled ? " ENABLED" : " DISABLED");
-        if (!alert_enabled) {
-          Serial.println("   (Speaker will be silent)");
-        }
-        break;
-        
-      case 't':
-      case 'T':
-        Serial.println("\n Running LED test sequence...");
-        status_led_test_sequence();
-        status_led_update();  // Return to current hydration state
-        break;
-        
-      case 'l':
-      case 'L':
-        led_on = !led_on;
-        if (led_on) {
-          Serial.println("\n LED ON");
-          status_led_update();
-        } else {
-          Serial.println("\n LED OFF");
-          status_led_off();
-        }
-        break;
-        
-      case 'h':
-      case 'H':
-        Serial.println("\n========== HELP MENU ==========");
-        Serial.println("Available Commands:");
-        Serial.println("  'd' - Add 200ml to hydration");
-        Serial.println("  'D' - Add 500ml to hydration");
-        Serial.println("  'r' - Reset daily hydration");
-        Serial.println("  's' - Show detailed status");
-        Serial.println("  'a' - Toggle speaker alerts");
-        Serial.println("  't' - Test LED colors");
-        Serial.println("  'l' - Toggle LED on/off");
-        Serial.println("  'h' - Show this help");
-        Serial.println("\nHydration Levels:");
-        Serial.println("   RED    = 0-500ml   (CRITICAL)");
-        Serial.println("   ORANGE = 500-1000ml (LOW)");
-        Serial.println("   YELLOW = 1000-1500ml (OK)");
-        Serial.println("   GREEN  = 1500ml+   (GOOD)");
-        Serial.println("===============================\n");
-        break;
-        
-      case '\n':
-      case '\r':
-        // Ignore newlines/carriage returns
-        break;
-        
-      default:
-        Serial.printf("\n Unknown command: '%c'\n", cmd);
-        Serial.println("Type 'h' for help\n");
-        break;
-    }
-  }
-  
-  delay(100);
+
 }

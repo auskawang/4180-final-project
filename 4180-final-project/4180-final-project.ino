@@ -1,5 +1,6 @@
 #include <Arduino.h>
-
+#include "scale.h"
+#include "hydration.h"
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
 */
@@ -25,7 +26,11 @@ void taskHTMLPage(void *pv) {
 Detects scale changes and stores meaningful changes in non-volatile memory
 */
 void taskReadScale(void *pv) {
-
+  while (1) {
+    update_hydration_status(-1 * scale_read_delta());
+    Serial.println(get_hydration_state());
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
 }
 
 /*
@@ -37,10 +42,12 @@ void taskPowerManager(void *py) {
 
 void setup() {
   Serial.begin(115200);
+  scale_init();
   // xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
   // xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
+  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
 }
 
 void loop() {
-  
+
 }

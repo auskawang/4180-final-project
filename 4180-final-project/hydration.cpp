@@ -6,34 +6,25 @@ HydrationState hydration_state = CRITICAL;
 float initial_time = 0;
 float grams_left = DAILY_GOAL_GRAMS;
 float tracker = DAILY_GOAL_GRAMS;
+float total_consumed = 0.0;  // Track total consumed today
 
 void hydration_init() {
-  // Try to load previous data from storage
-  HydrationData stored_data;
-  if (storage_load_hydration_data(&stored_data)) {
-    grams_left = stored_data.grams_left;
-    initial_time = stored_data.initial_time;
-    Serial.println("Loaded hydration data from storage");
-  } else {
-    // No stored data, use defaults
-    grams_left = DAILY_GOAL_GRAMS;
-    initial_time = 0;
-    Serial.println("Starting with fresh hydration data");
-  }
+  grams_left = DAILY_GOAL_GRAMS;
+  initial_time = 0;
+  total_consumed = 0.0;
+  Serial.println("Hydration module initialized");
 }
 
 void record_grams_drank(float grams_drank) {
   grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
+  total_consumed += grams_drank;
   
-  // Save to storage whenever consumption is recorded
-  storage_save_hydration_data(grams_left, initial_time, DAILY_GOAL_GRAMS);
+  Serial.printf("Recorded: %.2fg drank, Total today: %.2fg\n", grams_drank, total_consumed);
 }
 
 void update_hydration_status() {
   if (initial_time == 0) {
     initial_time = millis();
-    // Save initial time to storage
-    storage_save_hydration_data(grams_left, initial_time, DAILY_GOAL_GRAMS);
   }
   
   float time_now = millis();
@@ -64,10 +55,27 @@ HydrationState get_hydration_state() {
   return hydration_state;
 }
 
+float get_total_consumed() {
+  return total_consumed;
+}
+
+/**
+ * Save today's hydration data to storage
+ * Call this at end of day or when user requests
+ */
+void hydration_save_day() {
+  storage_save_today(total_consumed, DAILY_GOAL_GRAMS);
+  Serial.printf("Saved today's data: %.2fg / %.2fg\n", total_consumed, DAILY_GOAL_GRAMS);
+}
+
+/**
+ * Reset current day's tracking
+ * Does NOT clear 7-day history, just resets today
+ */
 void hydration_reset() {
   grams_left = DAILY_GOAL_GRAMS;
   initial_time = 0;
+  total_consumed = 0.0;
   hydration_state = CRITICAL;
-  storage_clear_all();
-  Serial.println("Hydration data reset");
+  Serial.println("Today's hydration data reset");
 }

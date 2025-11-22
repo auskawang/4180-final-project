@@ -3,6 +3,7 @@
 #include "hydration.h"
 #include "status_led.h"
 #include "scale.h"
+#include "web.h"
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -28,12 +29,14 @@ void taskAlertUser(void *pv) {
 }
 
 /*
-Generates HTML page allowing user to view hydration data and interact with system wirelessly through Bluetooth
+Generates HTML page allowing user to view hydration data and interact with system wirelessly through Wifi
 */
 void taskHTMLPage(void *pv) {
   while(1) {
-    // HTML server logic - TO BE IMPLEMENTED
-    vTaskDelay(pdMS_TO_TICKS(100));
+    set_grams_left_and_tracker(read_grams_left(), read_tracker());
+    set_total_grams(read_total_grams());
+    webserver_handle_client();
+    vTaskDelay(10);
   }
 }
 
@@ -52,6 +55,14 @@ void taskReadScale(void *pv) {
     if (current_weight > 30.0)
       prev_weight = current_weight;
     update_hydration_status();
+
+    //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
+    if (read_tracker() == 0) {
+      //store(read_total_grams());
+      reset();
+    }
+      
+    
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
@@ -71,11 +82,11 @@ void setup() {
   scale_init();
   status_led_init();
   speaker_init();
-  // xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 1, NULL);
-  // xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 1, NULL);
-  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
-  xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 2, NULL);
+  web_init();
+  xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 3, NULL);
   xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 3, NULL);
+  xTaskCreate(taskReadScale, "taskReadScale", 2048, NULL, 1, NULL);
+  xTaskCreate(taskHTMLPage, "taskHTMLPage", 2048, NULL, 2, NULL);
 }
 
 void loop() {

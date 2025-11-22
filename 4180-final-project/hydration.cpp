@@ -1,4 +1,5 @@
 #include "hydration.h"
+#include "storage.h"
 #include <Arduino.h>
 
 HydrationState hydration_state = CRITICAL;
@@ -17,14 +18,16 @@ void reset() {
   tracker = DAILY_GOAL_GRAMS;
   total_grams = 0;
 }
+
 void update_hydration_status() {
   if (initial_time == 0) {
     initial_time = millis();
   }
+  
   float time_now = millis();
   float time_since_start = time_now - initial_time;
   
-  //tracker mimics the ideal grams_left at a certain time; tracker should decrease linearly (goal - goal/total_time * ms passed)
+  // tracker mimics the ideal grams_left at a certain time
   float subtract = DAILY_GOAL_GRAMS/TOTAL_TIME_MS * time_since_start;
   tracker = (DAILY_GOAL_GRAMS - subtract < 0) ? 0 : DAILY_GOAL_GRAMS - subtract;
 
@@ -33,11 +36,10 @@ void update_hydration_status() {
   Serial.print(" tracker=");
   Serial.println(tracker);
 
-  //if we are behind track then change hydration state to CRITICAL
+  // Update hydration state based on progress
   if (tracker - grams_left < 0) {
     hydration_state = CRITICAL;
   }
-  //if tracker is close then set to NEEDS_WATER
   else if (tracker - grams_left < DAILY_GOAL_GRAMS / 5) {
     hydration_state = NEEDS_WATER;
   }

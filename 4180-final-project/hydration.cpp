@@ -63,3 +63,7 @@ float read_tracker() {
 float read_total_grams() {
   return DAILY_GOAL_GRAMS - grams_left;
 }
+
+float read_goal_grams() {
+  return DAILY_GOAL_GRAMS;
+}

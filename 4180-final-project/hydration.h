@@ -9,6 +9,7 @@ HydrationState get_hydration_state();
 void record_grams_drank(float grams_drank);
 float read_grams_left();
 float read_tracker();
+float read_goal_grams();
 void reset();
 float read_total_grams();
 #endif

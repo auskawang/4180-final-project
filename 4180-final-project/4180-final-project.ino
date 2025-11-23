@@ -5,6 +5,7 @@
 #include "scale.h"
 #include "storage.h"
 #include "web.h"
+#include "power.h"
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -53,11 +54,14 @@ void taskReadScale(void *pv) {
     // If there is something on the scale, weight decreased, and difference is meaningful
     if (current_weight > 30.0 && current_weight < prev_weight && prev_weight - current_weight > 30.0) {
       record_grams_drank(prev_weight - current_weight);  // This updates today's consumption
+      power_update_activity();  // Reset sleep timer on meaningful weight change
     }
     
-    if (current_weight > 30.0)
+    if (current_weight > 30.0) {
       prev_weight = current_weight;
-      
+      power_update_activity();  // Reset sleep timer when bottle is on scale
+    }
+     
     update_hydration_status();
 
     //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
@@ -78,22 +82,38 @@ Turns sleep mode on if no meaningful weight changes occur for x seconds, and wak
 */
 void taskPowerManager(void *pv) {
   while(1) {
-    // Power management logic - TO BE IMPLEMENTED
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    power_check_and_sleep();  // check and enter sleep
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 
 void setup() {
   Serial.begin(115200);
+
+  // Check if we woke from deep sleep
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
+    // Quick green flash to indicate wake-up
+    status_led_init();
+    LEDColor green = COLOR_GOOD;
+    status_led_set_color(green);
+    delay(300);
+    status_led_off();
+    delay(200);
+  }
+
   scale_init();
   status_led_init();
   speaker_init();
   web_init();
   storage_init();
+  power_init();
   xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 3, NULL);
   xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 3, NULL);
   xTaskCreate(taskReadScale, "taskReadScale", 4096, NULL, 1, NULL);
   xTaskCreate(taskHTMLPage, "taskHTMLPage", 2048, NULL, 2, NULL);
+  xTaskCreate(taskPowerManager, "taskPowerManager", 2048, NULL, 1, NULL);
 }
 
 void loop() {

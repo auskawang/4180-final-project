@@ -6,11 +6,11 @@
 //SCALE -----------------------------------------------------------
 #define SCALE_DATA_PIN 6
 #define SCALE_CLK_PIN 7
-#define SCALE_CALIBRATION_VAL -108.207550
+#define SCALE_CALIBRATION_VAL -426.602600
 
 //HYDRATION -----------------------------------------------------------
 #define DAILY_GOAL_GRAMS 300.0
-#define TOTAL_TIME_MS (120.0 * 1000) //120 seconds
+#define TOTAL_TIME_MS (10.0 * 1000) //120 seconds
 
 enum HydrationState {
     HYDRATED,
@@ -51,5 +51,15 @@ struct LEDColor {
 #define COLOR_CRITICAL  {255, 0, 0}      // Red - need to drink now
 #define COLOR_OFF       {0, 0, 0}        // Off
 
+//STORAGE -----------------------------------------------------------
+// Number of days to store
+#define MAX_ENTRIES 7
+
+// Structure to hold a single day's hydration data
+struct Entry {
+  uint32_t timestamp;        // Unix timestamp for the day
+  float grams_drank;      // Total grams consumed that day
+  float goal;          // Daily goal for that day
+};
 
 #endif

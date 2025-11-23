@@ -5,8 +5,8 @@
 #include "driver/rtc_io.h"
 
 // Sleep configuration
-#define INACTIVITY_TIMEOUT_MS 20000  // 20 seconds of no weight change
-#define SLEEP_DURATION_SEC 15       // Wake up every 15 seconds to check
+#define INACTIVITY_TIMEOUT_MS 15000  // 15 seconds of no weight change
+#define SLEEP_DURATION_SEC 5       // Wake up every 10 seconds to check
 
 static unsigned long last_activity_time = 0;
 static bool activity_detected = false;

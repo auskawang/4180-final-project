@@ -12,4 +12,4 @@ void power_sleep_indicator();
 void power_enter_sleep();
 void power_check_and_sleep();
 
-#endif
+#endif // POWER_H

@@ -54,14 +54,14 @@ void taskReadScale(void *pv) {
     // If there is something on the scale, weight decreased, and difference is meaningful
     if (current_weight > 30.0 && current_weight < prev_weight && prev_weight - current_weight > 30.0) {
       record_grams_drank(prev_weight - current_weight);  // This updates today's consumption
-      power_update_activity();  // Reset sleep timer on meaningful weight change
+      power_update_activity();  // ADD THIS LINE - Reset sleep timer on meaningful weight change
     }
     
     if (current_weight > 30.0) {
       prev_weight = current_weight;
-      power_update_activity();  // Reset sleep timer when bottle is on scale
+      power_update_activity();  // ADD THIS LINE - Reset sleep timer when bottle is on scale
     }
-     
+      
     update_hydration_status();
 
     //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
@@ -82,15 +82,15 @@ Turns sleep mode on if no meaningful weight changes occur for x seconds, and wak
 */
 void taskPowerManager(void *pv) {
   while(1) {
-    power_check_and_sleep();  // check and enter sleep
+    power_check_and_sleep();  // Actually check and enter sleep
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 
 void setup() {
   Serial.begin(115200);
-
-  // Check if we woke from deep sleep
+  
+  // Check if we woke from deep sleep - ADD THIS BLOCK
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
   
   if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
@@ -102,7 +102,8 @@ void setup() {
     status_led_off();
     delay(200);
   }
-
+  // END OF ADDED BLOCK
+  
   scale_init();
   status_led_init();
   speaker_init();

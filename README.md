@@ -32,27 +32,27 @@ For the Hydration Tracker hardware, the following components are required:
 
 | ESP32-C6 Pin | HX711 | RGB LED | Speaker | Power |
 | :----------: | :---: | :-----: | :-----: | :---: |
-| 3.3V         | VCC   |         |         |       |
+| 5V           | VCC   |         |         | +     |
 | GND          | GND   | Cathode | -       | -     |
-| GPIO 6       | DT    |         |         |       |
-| GPIO 7       | SCK   |         |         |       |
+| GPIO 6       | DAT   |         |         |       |
+| GPIO 7       | CLK   |         |         |       |
 | GPIO 15      |       | Red     |         |       |
 | GPIO 23      |       | Green   |         |       |
 | GPIO 22      |       | Blue    |         |       |
 | GPIO 21      |       |         | +       |       |
-| VIN          |       |         |         | +     |
+| VIN          |       |         |         |       |
 
 **Load Cell Wiring:**
-- Red Wire → E+
-- Black Wire → E-
-- White Wire → A-
-- Green Wire → A+
+- Red Wire → RED
+- Black Wire → BLK
+- White Wire → WHT
+- Green Wire → GRN
 
 ### Assembly Notes
 
 The load cell should be mounted in a stable configuration to accurately measure the weight of the water bottle. We recommend:
 1. Securing the load cell to a flat, rigid base
-2. Creating a platform on top of the load cell for the water bottle to rest on
+2. Creating a circular platform on top of the load cell for the water bottle to rest on
 3. Ensuring the load cell is calibrated before first use (calibration value in `config.h`)
 
 The RGB LED uses PWM control for color mixing, allowing smooth transitions between hydration states. Each color channel should have a 220Ω current-limiting resistor.

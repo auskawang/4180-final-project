@@ -31,20 +31,28 @@ void update_hydration_status() {
   float subtract = DAILY_GOAL_GRAMS/TOTAL_TIME_MS * time_since_start;
   tracker = (DAILY_GOAL_GRAMS - subtract < 0) ? 0 : DAILY_GOAL_GRAMS - subtract;
 
-  Serial.print("grams_left=");
-  Serial.print(grams_left);
-  Serial.print(" tracker=");
-  Serial.println(tracker);
-
-  // Update hydration state based on progress
-  if (tracker - grams_left < 0) {
-    hydration_state = CRITICAL;
+  if (DEBUG) {
+    Serial.print("grams_left=");
+    Serial.print(grams_left);
+    Serial.print(" tracker=");
+    Serial.println(tracker);
   }
-  else if (tracker - grams_left < DAILY_GOAL_GRAMS / 5) {
-    hydration_state = NEEDS_WATER;
+
+  //if met goal, congrats!
+  if (grams_left == 0) {
+    hydration_state = COMPLETED;
   }
   else {
-    hydration_state = HYDRATED;
+    // Update hydration state based on progress
+    if (tracker - grams_left < 0) {
+      hydration_state = CRITICAL;
+    }
+    else if (tracker - grams_left < DAILY_GOAL_GRAMS / 5) {
+      hydration_state = NEEDS_WATER;
+    }
+    else {
+      hydration_state = HYDRATED;
+    }
   }
 }
 

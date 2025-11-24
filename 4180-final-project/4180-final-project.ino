@@ -5,6 +5,7 @@
 #include "scale.h"
 #include "storage.h"
 #include "web.h"
+#include "state.h"
 
 /*
 Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
@@ -12,7 +13,7 @@ Status LED that ranges from green (on track on hydration) to red (need to drink 
 void taskUpdateStatusLED(void *pv) {
   while(1) {
     status_led_update(get_hydration_state());
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 
@@ -32,10 +33,29 @@ void taskAlertUser(void *pv) {
 Generates HTML page allowing user to view hydration data and interact with system wirelessly through Wifi
 */
 void taskHTMLPage(void *pv) {
-  while(1) {
-    set_goal_grams(read_goal_grams());
-    set_total_grams(read_total_grams());
-    webserver_handle_client();
+  while(1) {   
+    //if user presses web page button
+    if (get_web_request()) { 
+      //turn on web page
+      web_enable();
+      unsigned long client_connect_time = millis();
+      set_goal_grams(read_goal_grams());
+      set_total_grams(read_total_grams());
+      //keep web page on until 60 seconds pass with no client
+      while(1) {
+        bool no_client = false;
+        //if true, then there is a client connected
+        if (webserver_handle_client()) {
+          client_connect_time = millis();
+        }
+        if (millis() - client_connect_time > CLIENT_TIMEOUT_SECS * 1000) {
+          break;
+        }
+        vTaskDelay(5);
+      }
+      set_web_request(false);
+      web_disable();
+    }
     vTaskDelay(10);
   }
 }
@@ -73,27 +93,17 @@ void taskReadScale(void *pv) {
   }
 }
 
-/*
-Turns sleep mode on if no meaningful weight changes occur for x seconds, and wakes up when there is
-*/
-void taskPowerManager(void *pv) {
-  while(1) {
-    // Power management logic - TO BE IMPLEMENTED
-    vTaskDelay(pdMS_TO_TICKS(5000));
-  }
-}
-
 void setup() {
   Serial.begin(115200);
   scale_init();
   status_led_init();
-  speaker_init();
   web_init();
+  speaker_init();
   storage_init();
   xTaskCreate(taskUpdateStatusLED, "taskUpdateStatusLED", 2048, NULL, 3, NULL);
   xTaskCreate(taskAlertUser, "taskAlertUser", 2048, NULL, 3, NULL);
   xTaskCreate(taskReadScale, "taskReadScale", 4096, NULL, 1, NULL);
-  xTaskCreate(taskHTMLPage, "taskHTMLPage", 2048, NULL, 2, NULL);
+  xTaskCreate(taskHTMLPage, "taskHTMLPage", 4096, NULL, 2, NULL);
 }
 
 void loop() {

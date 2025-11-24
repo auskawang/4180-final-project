@@ -1,60 +1,71 @@
 #include "status_led.h"
 
 static LEDColor current_color = COLOR_OFF;
+Adafruit_NeoPixel rgb(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 void status_led_init() {
-  // Setup RGB LED pins
-  pinMode(LED_RED_PIN, OUTPUT);
-  pinMode(LED_GREEN_PIN, OUTPUT);
-  pinMode(LED_BLUE_PIN, OUTPUT);
-  
-  // Initialize PWM for each color channel
-  ledcAttach(LED_RED_PIN, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-  ledcAttach(LED_GREEN_PIN, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-  ledcAttach(LED_BLUE_PIN, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-  
-  // Start with LED off
-  status_led_off();
-  
-  //Serial.println("RGB LED initialized");
-  //Serial.printf("LED Pins - R:%d G:%d B:%d\n", LED_RED_PIN, LED_GREEN_PIN, LED_BLUE_PIN);
-  //Serial.printf("LED Type: %s\n", COMMON_ANODE ? "Common Anode" : "Common Cathode");
+  rgb.begin();
+  rgb.show();
 }
 
 void status_led_set_color(LEDColor color) {
-  current_color = color;
-  
-  // Write PWM values to each channel (adjusted for LED type)
-  ledcWrite(LED_RED_PIN, color.red);
-  ledcWrite(LED_GREEN_PIN, color.green);
-  ledcWrite(LED_BLUE_PIN, color.blue);
-  
-  //Serial.printf("LED Color: R=%d G=%d B=%d\n", color.red, color.green, color.blue);
+    static uint16_t hue = 0;        // hue in HSV space (0-65535)
+    static bool rainbow_done = false;
+    static uint8_t fade_level = 255; // for fading to off
+
+    if (color.red == 255 && color.green == 255 && color.blue == 255) {
+        if (!rainbow_done) {
+            // Show rainbow color
+            uint32_t pixelColor = rgb.gamma32(rgb.ColorHSV(hue));
+            rgb.setPixelColor(0, pixelColor);
+            rgb.show();
+
+            hue += 1000;  // step through hue
+            if (hue >= 65535) {
+                hue = 65535; // clamp at end
+                rainbow_done = true;
+            }
+        } else {
+            // Fade out
+            fade_level = (fade_level > 5) ? fade_level - 5 : 0;
+            rgb.setPixelColor(0, rgb.Color(0, 0, 0, fade_level)); // adjust brightness if your lib supports it
+            rgb.show();
+        }
+    } else {
+        // Static color
+        rgb.setPixelColor(0, rgb.Color(color.red, color.green, color.blue));
+        rgb.show();
+    }
 }
 
 void status_led_set_from_hydration_state(HydrationState state) {
   LEDColor color;
+    switch(state) {
+        case HYDRATED:
+          color = COLOR_GOOD;
+          //Serial.println("LED:  GREEN (Good hydration)");
+          break;
+          
+        case NEEDS_WATER:
+          color = COLOR_OK;
+          //Serial.println("LED:  YELLOW (OK hydration)");
+          break;
+          
+        case CRITICAL:
+          color = COLOR_CRITICAL;
+          //Serial.println("LED:  RED (Critical - drink water!)");
+          break;
+        
+        case COMPLETED:
+          color = COLOR_HOORAY;
+          //Serial.println("LED:  RED (Critical - drink water!)");
+          break;
+
+        default:
+          color = COLOR_OFF;
+          break;
+      }
   
-  switch(state) {
-    case HYDRATED:
-      color = COLOR_GOOD;
-      //Serial.println("LED:  GREEN (Good hydration)");
-      break;
-      
-    case NEEDS_WATER:
-      color = COLOR_OK;
-      //Serial.println("LED:  YELLOW (OK hydration)");
-      break;
-      
-    case CRITICAL:
-      color = COLOR_CRITICAL;
-      //Serial.println("LED:  RED (Critical - drink water!)");
-      break;
-      
-    default:
-      color = COLOR_OFF;
-      break;
-  }
   
   status_led_set_color(color);
 }

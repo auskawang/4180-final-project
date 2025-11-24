@@ -2,7 +2,9 @@
 #define STATUS_LED_H
 
 #include <Arduino.h>
+#import <Adafruit_NeoPixel.h>
 #include "config.h"
+#include "state.h"
 
 // Configuration constants
 // ESP32-C6 compatible GPIO pins - ADJUST THESE TO YOUR WIRING

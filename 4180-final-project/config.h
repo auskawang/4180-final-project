@@ -3,16 +3,20 @@
 
 #include <Arduino.h>
 
+//DEBUG ---------
+#define DEBUG 1
+
 //SCALE -----------------------------------------------------------
 #define SCALE_DATA_PIN 6
 #define SCALE_CLK_PIN 7
-#define SCALE_CALIBRATION_VAL -426.602600
+#define SCALE_CALIBRATION_VAL -256.602600
 
 //HYDRATION -----------------------------------------------------------
 #define DAILY_GOAL_GRAMS 300.0
 #define TOTAL_TIME_MS (10.0 * 1000) //120 seconds
 
 enum HydrationState {
+    COMPLETED,
     HYDRATED,
     NEEDS_WATER,
     CRITICAL
@@ -30,10 +34,8 @@ enum SpeakerState {
 };
 
 //STATUS LED -----------------------------------------------------------
-#define LED_RED_PIN 15
-#define LED_GREEN_PIN 23
-#define LED_BLUE_PIN 22
-
+#define LED_PIN 8
+#define NUM_LEDS 1
 #define LED_PWM_FREQ 5000
 #define LED_PWM_RESOLUTION 8  // 8-bit resolution (0-255)
 
@@ -47,8 +49,9 @@ struct LEDColor {
 // Predefined colors for hydration states
 #define COLOR_GOOD      {0, 255, 0}      // Green - well hydrated
 #define COLOR_OK        {255, 255, 0}    // Yellow - acceptable
-#define COLOR_LOW       {255, 128, 0}    // Orange - should drink soon
-#define COLOR_CRITICAL  {255, 0, 0}      // Red - need to drink now
+#define COLOR_WHITE       {128, 128, 128}    // Orange - should drink soon
+#define COLOR_CRITICAL    {255, 0, 0}      // Red - nice!
+#define COLOR_HOORAY    {255, 255, 255}      // White - nice!
 #define COLOR_OFF       {0, 0, 0}        // Off
 
 //STORAGE -----------------------------------------------------------
@@ -61,5 +64,16 @@ struct Entry {
   float grams_drank;      // Total grams consumed that day
   float goal;          // Daily goal for that day
 };
+
+//WEB -----------------------------------------------------------
+#define BTN_PIN 5
+#define WEB_STATUS_PIN 4
+#define CLIENT_TIMEOUT_SECS 30
+
+//STATE -----------------------------------------------------------
+typedef enum {
+    STATE_WAITING_USER_INPUT,
+    STATE_RUNNING
+} SystemState;
 
 #endif

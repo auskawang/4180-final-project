@@ -1,28 +1,87 @@
 #include <WiFi.h>
 #include "web.h"
 #include "storage.h"
+#include "state.h"
 float web_goal_grams;
 float web_total_grams;
 Entry web_entries[MAX_ENTRIES];
+bool web_request = false;
+
+float user_goal_grams = 2000;  // default daily goal
+float user_duration_hours = 16; // default period
 //--------------------------------------------------
 // WiFi Settings
 //--------------------------------------------------
-const char* ssid     = "ESP32-14";
+const char* ssid     = "Hydration Tracker";
 const char* password = "12345678";
 
 WiFiServer server(80);
+unsigned long last_isr = 0;
+void set_user_goal(float goal) {
+    user_goal_grams = goal;
+}
 
+void set_user_duration(float duration) {
+    user_duration_hours = duration;
+}
+
+float get_user_goal() {
+    return user_goal_grams;
+}
+
+float get_user_duration() {
+    return user_duration_hours;
+}
+void IRAM_ATTR buttonISR() {
+    unsigned long now = millis();
+    if (now - last_isr > 50) {  // 50ms debounce
+        web_request = true;
+    }
+    last_isr = now;
+}
+
+bool get_web_request() {
+  return web_request;
+}
+
+void set_web_pin_state(uint8_t state) {
+  digitalWrite(WEB_STATUS_PIN, state);
+}
+
+void set_web_request(bool input) {
+  web_request = input;
+}
 //--------------------------------------------------
 // Initialize WiFi SoftAP
 //--------------------------------------------------
 void web_init() {
-  Serial.println("Starting WiFi AP...");
+  pinMode(WEB_STATUS_PIN, OUTPUT);
+  pinMode(BTN_PIN, INPUT_PULLUP);
+  attachInterrupt(
+        digitalPinToInterrupt(BTN_PIN),         
+        buttonISR,
+        FALLING             
+  );
+}
+
+void web_enable() {
+  if (DEBUG)
+    Serial.println("Starting WiFi AP...");
   WiFi.softAP(ssid, password);
 
-  Serial.print("AP Running. IP: ");
+  if (DEBUG)
+    Serial.print("AP Running. IP: ");
   Serial.println(WiFi.softAPIP());
 
   server.begin();
+  set_web_pin_state(HIGH);
+}
+
+void web_disable() {
+  if (DEBUG) Serial.println("Stopping server and turning off WiFi.");
+  WiFi.softAPdisconnect(true);
+  WiFi.mode(WIFI_OFF);
+  set_web_pin_state(LOW);
 }
 
 void set_goal_grams(float goal_grams_param) {
@@ -106,6 +165,78 @@ void webserver_send_page(WiFiClient &client) {
   client.println("<p>You Have Drank <span id='web_total_grams'><b>--</b></span> mL Today</p>");
   client.println("<div>");
 
+  // if (get_state() == STATE_WAITING_USER_INPUT) {
+  //   //----------------------------------------------------
+  //   // OVERLAY FOR USER INPUT
+  //   //----------------------------------------------------
+  //   client.println(R"rawliteral(
+  //   <style>
+  //     /* Overlay styling */
+  //     #overlay {
+  //       position: fixed;
+  //       top: 0; left: 0;
+  //       width: 100%; height: 100%;
+  //       background: rgba(0,0,0,0.7);
+  //       display: flex;
+  //       align-items: center;
+  //       justify-content: center;
+  //       z-index: 1000;
+  //     }
+  //     #overlay-box {
+  //       background: white;
+  //       padding: 20px;
+  //       border-radius: 10px;
+  //       text-align: center;
+  //       min-width: 250px;
+  //     }
+  //     #overlay-box input {
+  //       width: 80px;
+  //       margin: 5px;
+  //     }
+  //     #overlay-box button {
+  //       margin-top: 10px;
+  //       padding: 5px 15px;
+  //     }
+  //   </style>
+
+  //   <div id="overlay">
+  //     <div id="overlay-box">
+  //       <h2>Set Goal</h2>
+  //       <div>
+  //         <label>Duration (hours): </label>
+  //         <input type="number" id="inputDuration" min="1" max="24">
+  //       </div>
+  //       <div>
+  //         <label>Goal (mL): </label>
+  //         <input type="number" id="inputGoal" min="100">
+  //       </div>
+  //       <button onclick="submitOverlay()">Enter</button>
+  //     </div>
+  //   </div>
+
+  //   <script>
+  //     function submitOverlay() {
+  //       // read input values
+  //       const duration = document.getElementById('inputDuration').value;
+  //       const goal = document.getElementById('inputGoal').value;
+
+  //       // hide the overlay
+  //       document.getElementById('overlay').style.display = 'none';
+
+  //       // call a function to handle these values
+  //       setGoalAndDuration(duration, goal);
+  //     }
+
+  //     function setGoalAndDuration(duration, goal) {
+  //       // Example: Send values to ESP32 via AJAX
+  //       fetch(`/set_goal?duration=${duration}&goal=${goal}`)
+  //         .then(response => response.text())
+  //         .then(data => console.log("Goal updated:", data));
+  //     }
+  //   </script>
+  //   )rawliteral");
+  // }
+
   //----------------------------------------------------
   // TABLE OF HISTORY ENTRIES
   //----------------------------------------------------
@@ -146,9 +277,9 @@ void webserver_send_page(WiFiClient &client) {
 //--------------------------------------------------
 // Main webserver handler (call inside a task)
 //--------------------------------------------------
-void webserver_handle_client() {
+bool webserver_handle_client() {
   WiFiClient client = server.available();
-  if (!client) return;
+  if (!client) return false;
 
   // Read request
   String request = webserver_read_request(client);
@@ -159,7 +290,7 @@ void webserver_handle_client() {
   if (request.indexOf("GET /data") >= 0) {
     webserver_handle_data(client);
     client.stop();
-    return;
+    return true;
   }
 
   //reset button
@@ -171,7 +302,30 @@ void webserver_handle_client() {
       client.println();
       client.println("Action completed.");
       client.stop();
-      return;
+      return true;
+  }
+
+  // Handle goal/duration update
+  if (request.indexOf("GET /set_goal") >= 0) {
+    // Parse query parameters
+    int idxGoal = request.indexOf("goal=");
+    int idxDuration = request.indexOf("duration=");
+    if (idxGoal >= 0 && idxDuration >= 0) {
+      float goal = request.substring(idxGoal + 5, request.indexOf('&', idxGoal)).toFloat();
+      float duration = request.substring(idxDuration + 9, request.indexOf(' ', idxDuration)).toFloat();
+
+      set_user_goal(goal);
+      set_user_duration(duration);
+      change_to_running();
+
+      client.println("HTTP/1.1 200 OK");
+      client.println("Content-Type: text/plain");
+      client.println("Connection: close");
+      client.println();
+      client.println("Goal and duration updated.");
+      client.stop();
+      return true;
+    }
   }
   //--------------------------------------------------
   // Main HTML page

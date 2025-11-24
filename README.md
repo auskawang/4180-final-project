@@ -43,6 +43,8 @@ For the Hydration Tracker hardware, the following components are required:
 | VIN          |       |         |         |       |
 
 **Load Cell Wiring:**
+### ![LoadCell](images/LoadCell.jpg)
+
 - E+ → RED
 - E- → BLK
 - A- → WHT

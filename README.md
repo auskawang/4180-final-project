@@ -128,11 +128,11 @@ Main program file that:
 - Manages end-of-day data logging and resets
 
 ### Library Dependencies
-* Arduino Core for ESP32-C6
-* HX711 Library (for load cell interface)
-* WiFi (built-in ESP32)
-* NVS (Non-Volatile Storage, built-in)
-* FreeRTOS (built-in ESP32)
+* [Arduino Core for ESP32-C6](https://github.com/espressif/arduino-esp32)
+* [HX711 Library (for load cell interface)](https://github.com/bogde/HX711)
+* [WiFi (built-in ESP32)](https://docs.arduino.cc/libraries/wifi/)
+* [NVS (Non-Volatile Storage, built-in)](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/storage/nvs_flash.html)
+* [FreeRTOS (built-in ESP32)](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/freertos.html)
 
 ### System Overview
 

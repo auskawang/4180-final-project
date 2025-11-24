@@ -43,10 +43,10 @@ For the Hydration Tracker hardware, the following components are required:
 | VIN          |       |         |         |       |
 
 **Load Cell Wiring:**
-- Red Wire → RED
-- Black Wire → BLK
-- White Wire → WHT
-- Green Wire → GRN
+- E+ → RED
+- E- → BLK
+- A- → WHT
+- A+ → GRN
 
 ### Assembly Notes
 

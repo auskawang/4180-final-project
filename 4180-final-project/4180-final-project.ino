@@ -12,6 +12,11 @@ Status LED that ranges from green (on track on hydration) to red (need to drink 
 */
 void taskUpdateStatusLED(void *pv) {
   while(1) {
+    //until user enters input for the session, make LED turn white
+    while (get_state() == STATE_WAITING_USER_INPUT) {
+      status_led_show_waiting();
+      vTaskDelay(pdMS_TO_TICKS(100));
+    }
     status_led_update(get_hydration_state());
     vTaskDelay(pdMS_TO_TICKS(100));
   }
@@ -22,6 +27,11 @@ Speaker that audibly alerts the user when the LED is red and the user needs to d
 */
 void taskAlertUser(void *pv) {
   while(1) {
+    //while waiting for user input don't use the speaker
+    while (get_state() == STATE_WAITING_USER_INPUT) {
+      vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
     if (get_hydration_state() == CRITICAL) {
       speaker_alert();
     }
@@ -39,11 +49,16 @@ void taskHTMLPage(void *pv) {
       //turn on web page
       web_enable();
       unsigned long client_connect_time = millis();
-      set_goal_grams(read_goal_grams());
-      set_total_grams(read_total_grams());
+      
       //keep web page on until 60 seconds pass with no client
       while(1) {
         bool no_client = false;
+
+        if (get_state() == STATE_RUNNING) {
+          set_goal_grams(read_goal_grams());
+          set_total_grams(read_total_grams());
+        }
+        
         //if true, then there is a client connected
         if (webserver_handle_client()) {
           client_connect_time = millis();
@@ -68,6 +83,9 @@ void taskReadScale(void *pv) {
   Entry html_page_entries[MAX_ENTRIES];
 
   while (1) {
+    while (get_state() == STATE_WAITING_USER_INPUT) {
+      vTaskDelay(pdMS_TO_TICKS(100));
+    }
     float current_weight = scale_read_weight();
     
     // If there is something on the scale, weight decreased, and difference is meaningful
@@ -82,10 +100,13 @@ void taskReadScale(void *pv) {
 
     //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
     if (read_tracker() == 0) {
-      storage_add_entry(read_total_grams(), DAILY_GOAL_GRAMS, 100.0);
+      storage_add_entry(read_total_grams(), read_goal_grams(), read_time_length() * 1000);
       storage_load_entries(html_page_entries);
       set_history(html_page_entries);
-      reset();
+      //reset();
+      current_state = STATE_WAITING_USER_INPUT;
+      if (DEBUG) Serial.println(current_state);
+
       //storage_print_entries();
     }
     

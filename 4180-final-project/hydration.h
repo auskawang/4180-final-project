@@ -12,4 +12,7 @@ float read_tracker();
 float read_goal_grams();
 void reset();
 float read_total_grams();
+void set_goal(int goal);
+void set_time_length(int seconds);
+int read_time_length();
 #endif

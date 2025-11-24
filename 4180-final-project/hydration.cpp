@@ -4,19 +4,23 @@
 
 HydrationState hydration_state = CRITICAL;
 float initial_time = 0;
+float goal = 0;
 float grams_left = DAILY_GOAL_GRAMS;
 float tracker = DAILY_GOAL_GRAMS;
 float total_grams = 0;
-
+unsigned long time_period_ms = 0;
 void record_grams_drank(float grams_drank) {
   grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
   total_grams += grams_drank;
 }
 void reset() {
   initial_time = 0;
-  grams_left = DAILY_GOAL_GRAMS;
-  tracker = DAILY_GOAL_GRAMS;
+  //grams_left = DAILY_GOAL_GRAMS;
+  tracker = read_goal_grams();
+  goal = read_goal_grams();
+  grams_left = read_goal_grams();
   total_grams = 0;
+  //time_period_ms = 0;
 }
 
 void update_hydration_status() {
@@ -28,8 +32,8 @@ void update_hydration_status() {
   float time_since_start = time_now - initial_time;
   
   // tracker mimics the ideal grams_left at a certain time
-  float subtract = DAILY_GOAL_GRAMS/TOTAL_TIME_MS * time_since_start;
-  tracker = (DAILY_GOAL_GRAMS - subtract < 0) ? 0 : DAILY_GOAL_GRAMS - subtract;
+  float subtract = goal/time_period_ms * time_since_start;
+  tracker = (goal - subtract < 0) ? 0 : goal - subtract;
 
   if (DEBUG) {
     Serial.print("grams_left=");
@@ -47,7 +51,7 @@ void update_hydration_status() {
     if (tracker - grams_left < 0) {
       hydration_state = CRITICAL;
     }
-    else if (tracker - grams_left < DAILY_GOAL_GRAMS / 5) {
+    else if (tracker - grams_left < goal / 5) {
       hydration_state = NEEDS_WATER;
     }
     else {
@@ -69,9 +73,21 @@ float read_tracker() {
 }
 
 float read_total_grams() {
-  return DAILY_GOAL_GRAMS - grams_left;
+  return goal - grams_left;
 }
 
 float read_goal_grams() {
-  return DAILY_GOAL_GRAMS;
+  return goal;
+}
+
+void set_goal(int goal_param) {
+  goal = goal_param;
+}
+
+void set_time_length(int seconds) {
+  time_period_ms = seconds * 1000;
+}
+
+int read_time_length() {
+  return time_period_ms;
 }

@@ -8,6 +8,10 @@ void status_led_init() {
   rgb.show();
 }
 
+void status_led_show_waiting() {
+  rgb.setPixelColor(0, rgb.Color(120, 120, 120));
+  rgb.show();
+}
 void status_led_set_color(LEDColor color) {
     static uint16_t hue = 0;        // hue in HSV space (0-65535)
     static bool rainbow_done = false;

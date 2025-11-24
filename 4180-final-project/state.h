@@ -6,6 +6,7 @@
 
 void change_to_running();
 SystemState get_state();
+SystemState set_state(SystemState state);
 
 extern SystemState current_state;
 

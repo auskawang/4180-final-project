@@ -2,6 +2,7 @@
 #include "web.h"
 #include "storage.h"
 #include "state.h"
+#include "hydration.h"
 float web_goal_grams;
 float web_total_grams;
 Entry web_entries[MAX_ENTRIES];
@@ -165,77 +166,77 @@ void webserver_send_page(WiFiClient &client) {
   client.println("<p>You Have Drank <span id='web_total_grams'><b>--</b></span> mL Today</p>");
   client.println("<div>");
 
-  // if (get_state() == STATE_WAITING_USER_INPUT) {
-  //   //----------------------------------------------------
-  //   // OVERLAY FOR USER INPUT
-  //   //----------------------------------------------------
-  //   client.println(R"rawliteral(
-  //   <style>
-  //     /* Overlay styling */
-  //     #overlay {
-  //       position: fixed;
-  //       top: 0; left: 0;
-  //       width: 100%; height: 100%;
-  //       background: rgba(0,0,0,0.7);
-  //       display: flex;
-  //       align-items: center;
-  //       justify-content: center;
-  //       z-index: 1000;
-  //     }
-  //     #overlay-box {
-  //       background: white;
-  //       padding: 20px;
-  //       border-radius: 10px;
-  //       text-align: center;
-  //       min-width: 250px;
-  //     }
-  //     #overlay-box input {
-  //       width: 80px;
-  //       margin: 5px;
-  //     }
-  //     #overlay-box button {
-  //       margin-top: 10px;
-  //       padding: 5px 15px;
-  //     }
-  //   </style>
+  if (get_state() == STATE_WAITING_USER_INPUT) {
+    //----------------------------------------------------
+    // OVERLAY FOR USER INPUT
+    //----------------------------------------------------
+    client.println(R"rawliteral(
+    <style>
+      /* Overlay styling */
+      #overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      #overlay-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        min-width: 250px;
+      }
+      #overlay-box input {
+        width: 80px;
+        margin: 5px;
+      }
+      #overlay-box button {
+        margin-top: 10px;
+        padding: 5px 15px;
+      }
+    </style>
 
-  //   <div id="overlay">
-  //     <div id="overlay-box">
-  //       <h2>Set Goal</h2>
-  //       <div>
-  //         <label>Duration (hours): </label>
-  //         <input type="number" id="inputDuration" min="1" max="24">
-  //       </div>
-  //       <div>
-  //         <label>Goal (mL): </label>
-  //         <input type="number" id="inputGoal" min="100">
-  //       </div>
-  //       <button onclick="submitOverlay()">Enter</button>
-  //     </div>
-  //   </div>
+    <div id="overlay">
+      <div id="overlay-box">
+        <h2>Set Goal</h2>
+        <div>
+          <label>Duration (hours): </label>
+          <input type="number" id="inputDuration" min="1" max="24">
+        </div>
+        <div>
+          <label>Goal (mL): </label>
+          <input type="number" id="inputGoal" min="100">
+        </div>
+        <button onclick="submitOverlay()">Enter</button>
+      </div>
+    </div>
 
-  //   <script>
-  //     function submitOverlay() {
-  //       // read input values
-  //       const duration = document.getElementById('inputDuration').value;
-  //       const goal = document.getElementById('inputGoal').value;
+    <script>
+      function submitOverlay() {
+        // read input values
+        const duration = document.getElementById('inputDuration').value;
+        const goal = document.getElementById('inputGoal').value;
 
-  //       // hide the overlay
-  //       document.getElementById('overlay').style.display = 'none';
+        // hide the overlay
+        document.getElementById('overlay').style.display = 'none';
 
-  //       // call a function to handle these values
-  //       setGoalAndDuration(duration, goal);
-  //     }
+        // call a function to handle these values
+        setGoalAndDuration(duration, goal);
+      }
 
-  //     function setGoalAndDuration(duration, goal) {
-  //       // Example: Send values to ESP32 via AJAX
-  //       fetch(`/set_goal?duration=${duration}&goal=${goal}`)
-  //         .then(response => response.text())
-  //         .then(data => console.log("Goal updated:", data));
-  //     }
-  //   </script>
-  //   )rawliteral");
-  // }
+      function setGoalAndDuration(duration, goal) {
+        // Example: Send values to ESP32 via AJAX
+        fetch(`/set_goal?duration=${duration}&goal=${goal}`)
+          .then(response => response.text())
+          .then(data => console.log("Goal updated:", data));
+      }
+    </script>
+    )rawliteral");
+  }
 
   //----------------------------------------------------
   // TABLE OF HISTORY ENTRIES
@@ -314,8 +315,15 @@ bool webserver_handle_client() {
       float goal = request.substring(idxGoal + 5, request.indexOf('&', idxGoal)).toFloat();
       float duration = request.substring(idxDuration + 9, request.indexOf(' ', idxDuration)).toFloat();
 
+      
       set_user_goal(goal);
       set_user_duration(duration);
+      
+      //hydration.cpp
+      set_goal(goal);
+      set_time_length(duration);
+      reset();
+      
       change_to_running();
 
       client.println("HTTP/1.1 200 OK");

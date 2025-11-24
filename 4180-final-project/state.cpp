@@ -9,3 +9,6 @@ void change_to_running() {
 SystemState get_state() {
   return current_state;
 }
+SystemState set_state(SystemState state) {
+  current_state = state;
+}

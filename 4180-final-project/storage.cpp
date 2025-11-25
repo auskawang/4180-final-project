@@ -17,7 +17,7 @@ void storage_init() {
 void storage_load_entries(Entry entries[MAX_ENTRIES]) {
   nvs_handle_t handle;
   if (nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK) {
-    Serial.println("NVS open failed");
+    if (DEBUG) Serial.println("NVS open failed");
     return;
   }
 
@@ -35,7 +35,7 @@ void storage_load_entries(Entry entries[MAX_ENTRIES]) {
 void storage_save_entries(const Entry entries[MAX_ENTRIES]) {
   nvs_handle_t handle;
   if (nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK) {
-    Serial.println("NVS open failed");
+    if (DEBUG) Serial.println("NVS open failed");
     return;
   }
 

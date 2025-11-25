@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 //DEBUG ---------
-#define DEBUG 1
+#define DEBUG 0
 
 //SCALE -----------------------------------------------------------
 #define SCALE_DATA_PIN 6
@@ -46,9 +46,8 @@ struct LEDColor {
 // Predefined colors for hydration states
 #define COLOR_GOOD      {0, 255, 0}      // Green - well hydrated
 #define COLOR_OK        {255, 255, 0}    // Yellow - acceptable
-#define COLOR_WHITE       {128, 128, 128}    // Orange - should drink soon
-#define COLOR_CRITICAL    {255, 0, 0}      // Red - nice!
-#define COLOR_COMPLETED    {128, 0, 128}      // White - nice!
+#define COLOR_CRITICAL    {255, 0, 0}      // Red - drink water
+#define COLOR_COMPLETED    {128, 0, 128}      // Purple - goal met
 #define COLOR_OFF       {0, 0, 0}        // Off
 
 //STORAGE -----------------------------------------------------------

@@ -55,15 +55,15 @@ void taskHTMLPage(void *pv) {
         bool no_client = false;
         //if waiting for user input then don't read from hydration.cpp
         if (get_state() == STATE_RUNNING) {
-          set_goal_grams(read_goal_grams());
-          set_total_grams(read_total_grams());
+          set_goal_grams(get_goal_grams());
+          set_total_grams(get_total_grams());
         }
         
         //if true, then there is a client connected
         if (webserver_handle_client()) {
           client_connect_time = millis();
         }
-        //keep web page on until 60 seconds pass with no client
+        //keep web page on until CLIENT_TIMEOUT_SECS seconds pass with no client
         if (millis() - client_connect_time > CLIENT_TIMEOUT_SECS * 1000) {
           break;
         }
@@ -103,10 +103,10 @@ void taskReadScale(void *pv) {
 
     update_hydration_status();
 
-    //if the tracker is 0, then that means the session ended
-    if (read_tracker() == 0) {
+    //if the pacer is 0, then that means the session ended
+    if (get_pacer() == 0) {
       //store the sessions total water intake, the goal, and the session length in memory
-      storage_add_entry(read_total_grams(), read_goal_grams(), read_time_length());
+      storage_add_entry(get_total_grams(), get_goal_grams(), get_time_length());
 
       //load past sessions into web page
       storage_load_entries(html_page_entries);

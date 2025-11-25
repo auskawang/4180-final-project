@@ -12,29 +12,11 @@
 HX711 scale;
 float w1, w2, previous = 0;
 
-
 void scale_init()
 {
-  //Serial.begin(115200);
-  // Serial.println();
-  // Serial.println(__FILE__);
-  // Serial.print("HX711_LIB_VERSION: ");
-  // Serial.println(HX711_LIB_VERSION);
-  // Serial.println();
-
   scale.begin(SCALE_DATA_PIN, SCALE_CLK_PIN);
-
-  // Serial.print("UNITS: ");
-  // Serial.println(scale.get_units(10));
-
-  //  load cell factor 20 KG
-  //  scale.set_scale(127.15);
-  //  load cell factor 5 KG
-  scale.set_scale(SCALE_CALIBRATION_VAL);       //  TODO you need to calibrate this yourself.
+  scale.set_scale(SCALE_CALIBRATION_VAL);
   scale.tare();
-
-  // Serial.print("UNITS: ");
-  // Serial.println(scale.get_units(10));
 }
 
 float scale_read_delta()

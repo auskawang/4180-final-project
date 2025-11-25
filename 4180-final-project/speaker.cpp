@@ -7,7 +7,6 @@ void speaker_init() {
   pinMode(SPEAKER_PIN, OUTPUT);
   digitalWrite(SPEAKER_PIN, LOW);
   last_alert_time = 0;
-  //Serial.println("Speaker initialized");
 }
 
 void speaker_alert() {  
@@ -22,8 +21,6 @@ void speaker_alert() {
     ledcDetach(SPEAKER_PIN);
     
     last_alert_time = millis();
-    
-  
 }
 
 void speaker_stop() {

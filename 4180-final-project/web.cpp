@@ -46,9 +46,11 @@ void web_enable() {
     Serial.println("Starting WiFi AP...");
   WiFi.softAP(ssid, password);
 
-  if (DEBUG)
+  if (DEBUG) {
     Serial.print("AP Running. IP: ");
-  Serial.println(WiFi.softAPIP());
+    Serial.println(WiFi.softAPIP());
+  }
+    
 
   server.begin();
   set_web_pin_state(HIGH);
@@ -271,7 +273,7 @@ void webserver_send_page(WiFiClient &client) {
     const btn = document.getElementById('submitBtn');
 
     // Enable button only if all fields are non-empty
-    if (h !== "" && m !== "" && s !== "" && g !== "") {
+    if ((h + m + s) > 0 && g > 0) {
       btn.disabled = false;
     } else {
       btn.disabled = true;
@@ -284,9 +286,9 @@ void webserver_send_page(WiFiClient &client) {
     const sec = parseInt(document.getElementById('inputSeconds').value) || 0;
 
     // Convert to total seconds
-    const totalDuration = (hr * 3600 + min * 60 + sec == 0) ? 10 : hr * 3600 + min * 60 + sec;
+    const totalDuration = hr * 3600 + min * 60 + sec;
 
-    const goal = (document.getElementById('inputGoal').value < 100) ? 100 : document.getElementById('inputGoal').value;
+    const goal = document.getElementById('inputGoal').value;
     document.getElementById('overlay').style.display='none';
 
     fetch(`/set_goal?duration=${totalDuration}&goal=${goal}`)
@@ -426,7 +428,7 @@ bool webserver_handle_client() {
   webserver_send_page(client);
   client.stop();
 
-  Serial.println("Client disconnected.");
+  if (DEBUG) Serial.println("Client disconnected.");
 }
 
 //GETTERS AND SETTERS

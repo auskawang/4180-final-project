@@ -6,21 +6,26 @@ HydrationState hydration_state = NEEDS_WATER;
 float initial_time; //used to determine elapsed time
 float goal; //session water intake goal
 float grams_left; //grams left to reach goal
-float tracker;  //an "ideal" pacer for 
-float total_grams;
-unsigned long time_period_ms;
+float pacer;  //mainly used to determine hydration state, acts as an "ideal" grams_left
+float total_grams;  //total water intake so far during the session
+unsigned long time_period_ms; //duration of session in milliseconds
+
+//adds the grams_drank parameter to total water intake
 void record_grams_drank(float grams_drank) {
-  grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
+  grams_left = grams_left - grams_drank;
   total_grams += grams_drank;
 }
+
+//gets called every time a new session starts, resets variables and locks in new user inputs from website
 void reset() {
   initial_time = 0;
-  tracker = goal;
+  pacer = goal;
   grams_left = goal;
   total_grams = 0;
   hydration_state = NEEDS_WATER;
 }
 
+//determines hydration status based on time left and how much the user has drank so far
 void update_hydration_status() {
   if (initial_time == 0) {
     initial_time = millis();
@@ -29,27 +34,27 @@ void update_hydration_status() {
   float time_now = millis();
   float time_since_start = time_now - initial_time;
   
-  // tracker mimics the ideal grams_left at a certain time
+  // the pacer linearly decreases from the goal, represents an ideal grams_left
   float subtract = goal/time_period_ms * time_since_start;
-  tracker = (goal - subtract < 0) ? 0 : goal - subtract;
+  pacer = (goal - subtract < 0) ? 0 : goal - subtract;
 
   if (DEBUG) {
     Serial.print("grams_left=");
     Serial.print(grams_left);
-    Serial.print(" tracker=");
-    Serial.println(tracker);
+    Serial.print(" pacer=");
+    Serial.println(pacer);
   }
 
   //if met goal, then set state to COMPLETED
-  if (grams_left == 0) {
+  if (grams_left <= 0) {
     hydration_state = COMPLETED;
   }
-  // Update hydration state based on deviation from ideal drink tracker
+  // Update hydration state based on deviation from ideal drink pacer
   else {
-    if (tracker - grams_left <= -1 * goal / 5) {
+    if (pacer - grams_left <= -1 * goal / 5) {
       hydration_state = CRITICAL;
     }
-    else if (tracker - grams_left <= 0) {
+    else if (pacer - grams_left <= 0) {
       hydration_state = NEEDS_WATER;
     }
     else {
@@ -58,6 +63,7 @@ void update_hydration_status() {
   }
 }
 
+//GETTERS AND SETTERS
 HydrationState get_hydration_state() {
   return hydration_state;
 }
@@ -66,19 +72,15 @@ HydrationState set_hydration_state(HydrationState state_param) {
   hydration_state = state_param;
 }
 
-float read_grams_left() {
-  return grams_left;
+float get_pacer() {
+  return pacer;
 }
 
-float read_tracker() {
-  return tracker;
-}
-
-float read_total_grams() {
+float get_total_grams() {
   return goal - grams_left;
 }
 
-float read_goal_grams() {
+float get_goal_grams() {
   return goal;
 }
 
@@ -90,6 +92,6 @@ void set_time_length(int seconds) {
   time_period_ms = seconds * 1000;
 }
 
-int read_time_length() {
+int get_time_length() {
   return time_period_ms/1000;
 }

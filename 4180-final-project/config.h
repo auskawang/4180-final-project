@@ -12,8 +12,6 @@
 #define SCALE_CALIBRATION_VAL -256.602600
 
 //HYDRATION -----------------------------------------------------------
-#define TOTAL_TIME_MS 100
-#define DAILY_GOAL_GRAMS 500
 enum HydrationState {
     COMPLETED,
     HYDRATED,
@@ -50,7 +48,7 @@ struct LEDColor {
 #define COLOR_OK        {255, 255, 0}    // Yellow - acceptable
 #define COLOR_WHITE       {128, 128, 128}    // Orange - should drink soon
 #define COLOR_CRITICAL    {255, 0, 0}      // Red - nice!
-#define COLOR_HOORAY    {255, 255, 255}      // White - nice!
+#define COLOR_COMPLETED    {128, 0, 128}      // White - nice!
 #define COLOR_OFF       {0, 0, 0}        // Off
 
 //STORAGE -----------------------------------------------------------

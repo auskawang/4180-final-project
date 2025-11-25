@@ -2,30 +2,23 @@
 #include "storage.h"
 #include <Arduino.h>
 
-HydrationState hydration_state = CRITICAL;
-float initial_time = 0;
-float goal = 0;
-float grams_left = DAILY_GOAL_GRAMS;
-float tracker = DAILY_GOAL_GRAMS;
-float total_grams = 0;
-unsigned long time_period_ms = TOTAL_TIME_MS;
+HydrationState hydration_state = NEEDS_WATER;
+float initial_time; //used to determine elapsed time
+float goal; //session water intake goal
+float grams_left; //grams left to reach goal
+float tracker;  //an "ideal" pacer for 
+float total_grams;
+unsigned long time_period_ms;
 void record_grams_drank(float grams_drank) {
   grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
   total_grams += grams_drank;
 }
 void reset() {
   initial_time = 0;
-  //grams_left = DAILY_GOAL_GRAMS;
-  tracker = read_goal_grams();
-  goal = read_goal_grams();
-  grams_left = read_goal_grams();
+  tracker = goal;
+  grams_left = goal;
   total_grams = 0;
-  //time_period_ms = 0;
-
-  Serial.println(grams_left);
-  Serial.println(goal);
-  Serial.println(tracker);
-
+  hydration_state = NEEDS_WATER;
 }
 
 void update_hydration_status() {
@@ -47,16 +40,16 @@ void update_hydration_status() {
     Serial.println(tracker);
   }
 
-  //if met goal, congrats!
+  //if met goal, then set state to COMPLETED
   if (grams_left == 0) {
     hydration_state = COMPLETED;
   }
+  // Update hydration state based on deviation from ideal drink tracker
   else {
-    // Update hydration state based on progress
-    if (tracker - grams_left < 0) {
+    if (tracker - grams_left <= -1 * goal / 5) {
       hydration_state = CRITICAL;
     }
-    else if (tracker - grams_left < goal / 5) {
+    else if (tracker - grams_left <= 0) {
       hydration_state = NEEDS_WATER;
     }
     else {
@@ -67,6 +60,10 @@ void update_hydration_status() {
 
 HydrationState get_hydration_state() {
   return hydration_state;
+}
+
+HydrationState set_hydration_state(HydrationState state_param) {
+  hydration_state = state_param;
 }
 
 float read_grams_left() {

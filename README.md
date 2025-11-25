@@ -8,11 +8,11 @@ Created by Rohan Chadha and Auska Wang
 * [Media](#media)
 
 ## The Idea
-The Hydration Tracker is a smart water bottle scale that helps users maintain proper hydration throughout the day. The device monitors water consumption in real-time, provides visual and audio feedback on hydration status, and logs historical data for tracking progress over time.
+The Hydration Tracker is a smart water bottle scale that helps users maintain proper hydration throughout the day. The device monitors water consumption in real-time, provides visual feedback on hydration status through the onboard LED, and logs historical data for tracking progress over time.
 
-Our goal was to create an embedded system that seamlessly integrates into daily life to promote better health habits. The tracker uses a load cell to detect when water is consumed, calculates whether the user is on track with their hydration goals, and provides intuitive feedback through an RGB LED and speaker alerts.
+Our goal was to create an embedded system that seamlessly integrates into daily life to promote better health habits. The tracker uses a load cell to detect when water is consumed, calculates whether the user is on track with their hydration goals, and provides intuitive feedback through the ESP32's built-in LED and speaker alerts.
 
-The system also features a WiFi-enabled web interface that allows users to view their hydration statistics, check historical consumption data, and reset their tracking data - all accessible from any device connected to the same network.
+The system features a WiFi-enabled web interface that allows users to view their hydration statistics, check historical consumption data, and reset their tracking data - all accessible from any device connected to the same network. A dedicated push button enables easy WiFi connectivity control, with a blue LED indicator showing the connection status.
 
 ## Hardware Setup
 
@@ -22,25 +22,24 @@ For the Hydration Tracker hardware, the following components are required:
 * ESP32-C6-DevKitC-1 Microcontroller
 * HX711 Load Cell Amplifier
 * Load Cell (5kg capacity)
-* RGB LED (Common Cathode)
+* Blue LED (WiFi status indicator)
 * Buzzer
 * Battery Pack (for portable operation)
 * Breadboard
-* 220Ω Resistor (for RGB LED)
+* 330Ω Resistor (for RGB LED)
 
 ### Wiring
 
-| ESP32-C6 Pin | HX711 | RGB LED | Speaker | Power |
-| :----------: | :---: | :-----: | :-----: | :---: |
-| 5V           | VCC   |         |         | +     |
-| GND          | GND   | Cathode | -       | -     |
-| GPIO 6       | DAT   |         |         |       |
-| GPIO 7       | CLK   |         |         |       |
-| GPIO 15      |       | Red     |         |       |
-| GPIO 23      |       | Green   |         |       |
-| GPIO 22      |       | Blue    |         |       |
-| GPIO 21      |       |         | +       |       |
-| VIN          |       |         |         |       |
+| ESP32-C6 Pin | HX711 | Blue LED| Speaker | Push Button | Power |
+| :----------: | :---: | :-----: | :-----: | :---------: | :---: |
+| 5V           | VCC   |         |         |             |   +   | 
+| GND          | GND   | Cathode |    -    |     GND     |   -   |
+| GPIO 4       |       |  Anode  |         |             |       |
+| GPIO 5       |       |         |         |   Signal    |       |
+| GPIO 6       | DAT   |         |         |             |       |
+| GPIO 7       | CLK   |         |         |             |       |
+| GPIO 21      |       |         |    +    |             |       |
+
 
 **Load Cell Wiring:**
 ### ![LoadCell](images/LoadCell.jpg)
@@ -54,10 +53,17 @@ For the Hydration Tracker hardware, the following components are required:
 
 The load cell should be mounted in a stable configuration to accurately measure the weight of the water bottle. We recommend:
 1. Securing the load cell to a flat, rigid base
-2. Creating a circular platform on top of the load cell for the water bottle to rest on
+2. Creating a platform on top of the load cell for the water bottle to rest on
 3. Ensuring the load cell is calibrated before first use (calibration value in `config.h`)
 
-The RGB LED uses PWM control for color mixing, allowing smooth transitions between hydration states. Each color channel should have a 220Ω current-limiting resistor.
+The blue LED serves as a WiFi status indicator:
+- **Solid Blue**: WiFi connected and web server active
+- **Off**: WiFi disconnected
+
+The onboard LED provides hydration status feedback:
+- **Green**: On track with hydration goals
+- **Yellow**: Falling behind, should drink soon  
+- **Red**: Critical, need to drink immediately
 
 ## Code
 
@@ -70,8 +76,9 @@ Central configuration file containing:
 - Pin definitions for all hardware components
 - Calibration values for the load cell
 - Hydration goals and timing parameters
-- LED color definitions for different states
+- LED state definitions for different hydration levels
 - Storage configuration for historical data
+- WiFi credentials and settings
 
 #### **scale.cpp / scale.h**
 Handles the HX711 load cell interface:
@@ -89,13 +96,13 @@ Manages hydration tracking logic:
 - Provides reset functionality for new tracking periods
 
 #### **status_led.cpp / status_led.h**
-Controls the RGB LED feedback:
-- Initializes PWM channels for RGB control
-- Maps hydration states to colors:
+Controls the onboard LED feedback:
+- Initializes the ESP32-C6 onboard LED
+- Maps hydration states to LED patterns:
   - **Green**: On track with hydration
   - **Yellow**: Falling behind, should drink soon
   - **Red**: Critical, need to drink immediately
-- Provides smooth color transitions
+- Provides visual status at a glance
 
 #### **speaker.cpp / speaker.h**
 Manages audio alerts:
@@ -118,15 +125,17 @@ Implements WiFi access point and web server:
 - Provides AJAX endpoints for live updates
 - Displays historical consumption in table format
 - Allows users to reset tracking data
+- Can be toggled on/off via push button
 
 #### **4180.ino**
 Main program file that:
 - Initializes all hardware modules
 - Creates FreeRTOS tasks for concurrent operation:
-  - `taskReadScale`: Monitors scale for weight changes (every 500ms)
-  - `taskUpdateStatusLED`: Updates LED based on hydration state (every 2s)
+  - `taskReadScale`: Monitors scale for weight changes (every 100ms)
+  - `taskUpdateStatusLED`: Updates onboard LED based on hydration state (every 2s)
   - `taskAlertUser`: Triggers speaker alerts when needed (every 1s)
   - `taskHTMLPage`: Handles web server requests (every 10ms)
+  - `taskWiFiControl`: Manages WiFi button and blue LED status
 - Manages end-of-day data logging and resets
 
 ### Library Dependencies
@@ -152,6 +161,12 @@ The system uses a time-based tracking algorithm that compares actual consumption
 
 4. **Daily Reset**: When the tracking period ends (tracker reaches zero), the system logs the day's data to NVS and resets for a new tracking period
 
+#### WiFi Control
+The push button provides convenient WiFi management:
+- **Press once**: Toggle WiFi on/off
+- **Blue LED on**: WiFi active, web interface accessible
+- **Blue LED off**: WiFi disabled, battery saving mode
+
 #### RTOS Threading
 The system uses FreeRTOS to run multiple concurrent tasks:
 
@@ -164,7 +179,7 @@ The system uses FreeRTOS to run multiple concurrent tasks:
 
 **taskUpdateStatusLED** (Priority 3, 2KB stack)
 - Reads current hydration state
-- Updates RGB LED color accordingly
+- Updates onboard LED color/pattern accordingly
 - Provides immediate visual feedback
 - Runs every 2 seconds
 
@@ -178,7 +193,14 @@ The system uses FreeRTOS to run multiple concurrent tasks:
 - Updates web interface data (current consumption, goal, history)
 - Handles incoming HTTP requests
 - Serves HTML page and AJAX data endpoints
+- Only active when WiFi is enabled
 - Runs every 10ms for responsive web interface
+
+**taskWiFiControl** (Priority 2, 2KB stack)
+- Monitors push button for WiFi toggle requests
+- Controls blue LED status indicator
+- Manages WiFi connection state
+- Runs every 100ms
 
 ### Web Interface
 
@@ -188,6 +210,7 @@ The web interface provides:
 - Historical table showing last 7 days of consumption vs. goals
 - Reset button to clear historical data
 - Accessible via any device connected to the ESP32's WiFi network (IP: 192.168.4.1)
+- Can be enabled/disabled via push button to conserve power
 
 ### Customization
 
@@ -196,20 +219,45 @@ Key parameters can be adjusted in `config.h`:
 - `TOTAL_TIME_MS`: Tracking period duration (default: 120s for demo, change to 86400000 for 24 hours)
 - `SCALE_CALIBRATION_VAL`: Load cell calibration factor (must be calibrated for your specific hardware)
 - `ALERT_INTERVAL`: Time between audio alerts (default: 30 seconds)
-- LED color definitions for each hydration state
+- WiFi SSID and password
+- LED patterns for each hydration state
 
 ## Media
 
-### System in Action
-[Add images/videos here showing:]
-- Complete assembled system
-- RGB LED showing different states (green, yellow, red)
-- Web interface on phone/computer
-- Water bottle on scale platform
-- Historical data display
+### System Overview
+![Complete System](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/complete_system.jpg)
+*Fully assembled hydration tracker with ESP32-C6, load cell, blue WiFi LED, push button, and speaker*
+
+### Hardware Components
+![Hardware Setup](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/hardware_wiring.jpg)
+*Wiring diagram showing connections between ESP32-C6, HX711, and peripherals*
+
+### LED Status Indicators
+![Onboard LED - Hydrated](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_green.jpg)
+*Green onboard LED indicating good hydration status*
+
+![Onboard LED - Needs Water](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_yellow.jpg)
+*Yellow onboard LED indicating user should drink soon*
+
+![Onboard LED - Critical](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_critical.jpg)
+*Red onboard LED indicating critical hydration status*
+
+![Blue WiFi LED](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/blue_wifi_led.jpg)
+*Blue LED indicating WiFi is active and web interface is accessible*
+
+### Web Interface
+![Web Dashboard](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/web_interface.png)
+*Web interface showing current hydration level and 7-day history*
+
+### Device in Use
+![Water Bottle on Scale](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/bottle_on_scale.jpg)
+*Water bottle positioned on the load cell platform*
+
+![Push Button Control](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/wifi_button.jpg)
+*Push button for toggling WiFi connectivity*
 
 ### Demo Video
-[Link to demo video showing the complete system operation]
+[![Hydration Tracker Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
 ---
 

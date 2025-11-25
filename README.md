@@ -229,35 +229,35 @@ Key parameters can be adjusted in `config.h`:
 ## Media
 
 ### System Overview
-![Complete System](images/123.png)
+![Complete System](images/complete_system.jpg)
 *Fully assembled hydration tracker with ESP32-C6, load cell, blue WiFi LED, push button, and speaker*
 
 ### Hardware Components
-![Hardware Setup](images/123.png)
+![Hardware Setup](images/circuit_schematic.png)
 *Wiring diagram showing connections between ESP32-C6, HX711, and peripherals*
 
 ### LED Status Indicators
-![Onboard LED - Hydrated](images/123.png)
+![Onboard LED - Hydrated](images/green_led.jpg)
 *Green onboard LED indicating good hydration status*
 
-![Onboard LED - Needs Water](images/123.png)
+![Onboard LED - Needs Water](images/yellow_led.jpg)
 *Yellow onboard LED indicating user should drink soon*
 
-![Onboard LED - Critical](images/123.png)
+![Onboard LED - Critical](images/red_led.jpg)
 *Red onboard LED indicating critical hydration status*
 
-![Blue WiFi LED](images/123.png)
+![Blue WiFi LED](images/blue_led.jpg)
 *Blue LED indicating WiFi is active and web interface is accessible*
 
 ### Web Interface
-![Web Dashboard](images/123.png)
+![Web Dashboard](images/web_monitor.jpg)
 *Web interface showing current hydration level and 7-day history*
 
 ### Device in Use
-![Water Bottle on Scale](images/123.png)
+![Water Bottle on Scale](images/bottle_placed.jpg)
 *Water bottle positioned on the load cell platform*
 
-![Push Button Control](images/123.png)
+![Push Button Control](images/push_button.jpg)
 *Push button for toggling WiFi connectivity*
 
 ## Future Enhancements

@@ -49,6 +49,10 @@ For the Hydration Tracker hardware, the following components are required:
 - A- → WHT
 - A+ → GRN
 
+**Circuit Diagram:**
+### ![Circuit Diagram](images/circuit_schematic.png)
+
+
 ### Assembly Notes
 
 The load cell should be mounted in a stable configuration to accurately measure the weight of the water bottle. We recommend:
@@ -225,41 +229,36 @@ Key parameters can be adjusted in `config.h`:
 ## Media
 
 ### System Overview
-![Complete System](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/complete_system.jpg)
+![Complete System](images/123.png)
 *Fully assembled hydration tracker with ESP32-C6, load cell, blue WiFi LED, push button, and speaker*
 
 ### Hardware Components
-![Hardware Setup](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/hardware_wiring.jpg)
+![Hardware Setup](images/123.png)
 *Wiring diagram showing connections between ESP32-C6, HX711, and peripherals*
 
 ### LED Status Indicators
-![Onboard LED - Hydrated](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_green.jpg)
+![Onboard LED - Hydrated](images/123.png)
 *Green onboard LED indicating good hydration status*
 
-![Onboard LED - Needs Water](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_yellow.jpg)
+![Onboard LED - Needs Water](images/123.png)
 *Yellow onboard LED indicating user should drink soon*
 
-![Onboard LED - Critical](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/led_critical.jpg)
+![Onboard LED - Critical](images/123.png)
 *Red onboard LED indicating critical hydration status*
 
-![Blue WiFi LED](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/blue_wifi_led.jpg)
+![Blue WiFi LED](images/123.png)
 *Blue LED indicating WiFi is active and web interface is accessible*
 
 ### Web Interface
-![Web Dashboard](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/web_interface.png)
+![Web Dashboard](images/123.png)
 *Web interface showing current hydration level and 7-day history*
 
 ### Device in Use
-![Water Bottle on Scale](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/bottle_on_scale.jpg)
+![Water Bottle on Scale](images/123.png)
 *Water bottle positioned on the load cell platform*
 
-![Push Button Control](https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/images/wifi_button.jpg)
+![Push Button Control](images/123.png)
 *Push button for toggling WiFi connectivity*
-
-### Demo Video
-[![Hydration Tracker Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
-
----
 
 ## Future Enhancements
 

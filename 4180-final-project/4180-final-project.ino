@@ -8,11 +8,11 @@
 #include "state.h"
 
 /*
-Status LED that ranges from green (on track on hydration) to red (need to drink water to stay on track)
+Updates onboard LED to show various conditions
 */
 void taskUpdateStatusLED(void *pv) {
   while(1) {
-    //until user enters input for the session, make LED turn white
+    //until user enters required input for the session, make LED turn white
     while (get_state() == STATE_WAITING_USER_INPUT) {
       status_led_show_waiting();
       vTaskDelay(pdMS_TO_TICKS(100));
@@ -81,7 +81,8 @@ Detects scale changes and stores meaningful changes in non-volatile memory
 void taskReadScale(void *pv) {
   float prev_weight = 0;
   Entry html_page_entries[MAX_ENTRIES];
-
+  storage_load_entries(html_page_entries);
+  set_history(html_page_entries);
   while (1) {
     while (get_state() == STATE_WAITING_USER_INPUT) {
       vTaskDelay(pdMS_TO_TICKS(100));
@@ -100,13 +101,13 @@ void taskReadScale(void *pv) {
 
     //if the tracker is 0, then that means the "day" ended, so call reset function to reset hydration values and store grams of water drank for that day
     if (read_tracker() == 0) {
-      storage_add_entry(read_total_grams(), read_goal_grams(), read_time_length() * 1000);
+      storage_add_entry(read_total_grams(), read_goal_grams(), read_time_length());
       storage_load_entries(html_page_entries);
       set_history(html_page_entries);
-      //reset();
-      current_state = STATE_WAITING_USER_INPUT;
+      
       if (DEBUG) Serial.println(current_state);
-
+      set_refresh_flag(true);
+      current_state = STATE_WAITING_USER_INPUT;
       //storage_print_entries();
     }
     

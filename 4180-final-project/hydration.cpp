@@ -8,7 +8,7 @@ float goal = 0;
 float grams_left = DAILY_GOAL_GRAMS;
 float tracker = DAILY_GOAL_GRAMS;
 float total_grams = 0;
-unsigned long time_period_ms = 0;
+unsigned long time_period_ms = TOTAL_TIME_MS;
 void record_grams_drank(float grams_drank) {
   grams_left = (grams_left - grams_drank < 0) ? 0 : grams_left - grams_drank;
   total_grams += grams_drank;
@@ -89,5 +89,5 @@ void set_time_length(int seconds) {
 }
 
 int read_time_length() {
-  return time_period_ms;
+  return time_period_ms/1000;
 }

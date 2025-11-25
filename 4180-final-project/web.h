@@ -17,4 +17,5 @@ void web_enable();
 void web_disable();
 float get_user_goal();
 float get_user_duration();
+void set_refresh_flag(bool v);
 #endif

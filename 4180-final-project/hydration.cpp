@@ -21,6 +21,11 @@ void reset() {
   grams_left = read_goal_grams();
   total_grams = 0;
   //time_period_ms = 0;
+
+  Serial.println(grams_left);
+  Serial.println(goal);
+  Serial.println(tracker);
+
 }
 
 void update_hydration_status() {

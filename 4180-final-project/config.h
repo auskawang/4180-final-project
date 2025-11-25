@@ -12,9 +12,8 @@
 #define SCALE_CALIBRATION_VAL -256.602600
 
 //HYDRATION -----------------------------------------------------------
-#define DAILY_GOAL_GRAMS 300.0
-#define TOTAL_TIME_MS (10.0 * 1000) //120 seconds
-
+#define TOTAL_TIME_MS 100
+#define DAILY_GOAL_GRAMS 500
 enum HydrationState {
     COMPLETED,
     HYDRATED,
@@ -55,14 +54,14 @@ struct LEDColor {
 #define COLOR_OFF       {0, 0, 0}        // Off
 
 //STORAGE -----------------------------------------------------------
-// Number of days to store
+// Number of sessions to store
 #define MAX_ENTRIES 7
 
-// Structure to hold a single day's hydration data
+// Structure to hold a single session's hydration data
 struct Entry {
-  uint32_t timestamp;        // Unix timestamp for the day
-  float grams_drank;      // Total grams consumed that day
-  float goal;          // Daily goal for that day
+  uint32_t duration;        // session length in seconds
+  float grams_drank;      // total grams of water consumed during session
+  float goal;          // goal set for session
 };
 
 //WEB -----------------------------------------------------------

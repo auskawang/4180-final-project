@@ -4,10 +4,8 @@
 #include <Arduino.h>
 #include "config.h"
 
-void change_to_running();
 SystemState get_state();
-SystemState set_state(SystemState state);
-
+void set_state(SystemState state);
 extern SystemState current_state;
 
 #endif 

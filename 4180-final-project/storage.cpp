@@ -5,15 +5,15 @@
 #include <nvs.h>
 
 static const char* STORAGE_NAMESPACE = "hydrate";
-Entry entries[MAX_ENTRIES];
+Entry entries[MAX_ENTRIES]; //holds storage data
 
 void storage_init() {
   nvs_flash_init();
-
-  // Load existing data into the cache
+  // Load existing data
   storage_load_entries(entries);
 }
 
+//loads past session data into entries array
 void storage_load_entries(Entry entries[MAX_ENTRIES]) {
   nvs_handle_t handle;
   if (nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK) {
@@ -31,6 +31,7 @@ void storage_load_entries(Entry entries[MAX_ENTRIES]) {
   nvs_close(handle);
 }
 
+//saves entries array into memory
 void storage_save_entries(const Entry entries[MAX_ENTRIES]) {
   nvs_handle_t handle;
   if (nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &handle) != ESP_OK) {
@@ -41,10 +42,10 @@ void storage_save_entries(const Entry entries[MAX_ENTRIES]) {
   nvs_set_blob(handle, "history", entries, sizeof(Entry) * MAX_ENTRIES);
   nvs_commit(handle);
   nvs_close(handle);
-
 }
 
-void storage_add_entry(float grams_drank, float goal, float timestamp) {
+//adds entry data to past session data and automatically saves to memory
+void storage_add_entry(float grams_drank, float goal, float duration) {
   // Shift old entries: 6 <- 5 <- 4 ... <- 0
   for (int i = MAX_ENTRIES - 1; i > 0; i--) {
     entries[i] = entries[i - 1];
@@ -53,28 +54,18 @@ void storage_add_entry(float grams_drank, float goal, float timestamp) {
   // Put new entry in position 0
   entries[0].grams_drank = grams_drank;
   entries[0].goal = goal;
-  entries[0].timestamp = timestamp;
+  entries[0].duration = duration;
 
-  // Save the updated array
+  // Save the updated array to memory
   storage_save_entries(entries);
 }
 
+//resets past session data
 void storage_reset_entries() {
   for (int i = 0; i < MAX_ENTRIES; i++) {
     entries[i].grams_drank = 0;
     entries[i].goal = 0;
-    entries[i].timestamp = 0;
+    entries[i].duration = 0;
   }
-
   storage_save_entries(entries);
-}
-
-void storage_print_entries() {
-    for (int i = 0; i < MAX_ENTRIES; i++) {
-        Serial.printf("Entry %d: consumed=%.2f  goal=%.2f  timestamp=%.2f\n",
-                      i,
-                      entries[i].grams_drank,
-                      entries[i].goal,
-                      entries[i].timestamp);
-    }
 }
